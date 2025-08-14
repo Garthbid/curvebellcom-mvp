@@ -63,9 +63,7 @@
     .choice:hover{transform:translateY(-2px); border-color:rgba(108,184,255,.45); background:rgba(108,184,255,.06)}
     .choice input{margin-right:10px}
     .choice .title{font-weight:800; margin-bottom:6px}
-    .price{
-      font-size:28px; font-weight:900; letter-spacing:.2px;
-    }
+    .price{font-size:28px; font-weight:900; letter-spacing:.2px}
     form label{display:block; font-weight:700; margin:10px 0 6px}
     input[type="text"], input[type="number"], textarea, input[type="file"]{
       width:100%; background:#0f1524; color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px 12px;
@@ -105,6 +103,92 @@
     .print-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
     .worksheet-line{display:block; border-bottom:1px dashed #6b7380; margin:8px 0; height:18px}
     .img-preview{max-width:100%; border-radius:12px; border:1px solid rgba(255,255,255,.1)}
+
+    /* ========= Mobile Revamp Overrides ========= */
+    html { -webkit-text-size-adjust: 100%; }
+    body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+    .btn { min-height: 48px; padding: 14px 16px; border-radius: 14px; }
+    .row { gap: 12px; }
+    .card { border-radius: 16px; }
+
+    /* nicer file input */
+    input[type="file"]{
+      background:#0f1524;
+      border:1px dashed rgba(255,255,255,.25);
+      border-radius:12px;
+      padding:10px;
+    }
+    input[type="file"]::-webkit-file-upload-button{
+      border:none; border-radius:10px; padding:10px 12px; margin-right:8px;
+      background:linear-gradient(180deg,#7fd3ff,#6cb8ff); color:#051018; font-weight:700; cursor:pointer;
+    }
+    #upload-preview{ max-height: 260px; width:auto; }
+
+    /* Touch-friendly radios & exam blocks */
+    .exam-q .opts label{
+      min-height: 44px;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;         /* prevents iOS zoom on focus */
+      line-height: 1.25;
+    }
+    .exam-q h4{ font-size: 16px; }
+
+    /* Global input font-size to prevent iOS zoom */
+    input[type="text"], input[type="number"], textarea, select { font-size: 16px; }
+
+    /* YouTube/video */
+    iframe{ width:100%; aspect-ratio:16/9; border-radius:12px; }
+
+    /* One-column stacks, bigger taps, tighter spacing on phones */
+    @media (max-width: 768px){
+      .container{ padding: 16px; }
+
+      header.site{
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .hero{ grid-template-columns: 1fr; gap: 12px; }
+
+      .grid-2{ grid-template-columns: 1fr; gap: 12px; }
+
+      .row .btn{
+        width: 100%;
+        flex: 0 0 auto;
+      }
+
+      .card{ padding: 16px; }
+
+      h1{ font-size: 28px; line-height: 1.15; }
+      h2{ font-size: 22px; }
+      .result-big{ font-size: 40px; }
+
+      .pill{ font-size: 11px; padding: 6px 10px; }
+
+      .choice{ padding: 14px; border-radius: 12px; }
+      .choice .title{ display:block; font-size:16px; margin-bottom:4px; }
+      .choice input{ width:18px; height:18px; }
+
+      /* Lesson + worksheet readability */
+      .lessons .lesson{ padding: 12px; border-radius: 12px; }
+      .worksheet-line{ height: 20px; }
+
+      /* Upload preview */
+      #upload-preview{ max-width: 100%; height: auto; }
+
+      /* Reduce margins for dense pages */
+      .sp{ height: 6px; }
+    }
+
+    /* Even smaller screens */
+    @media (max-width: 380px){
+      h1{ font-size: 24px; }
+      h2{ font-size: 20px; }
+      .btn{ padding: 12px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -414,17 +498,13 @@
         <p class="badge">Analysis (Demo)</p>
         <h2>Feedback Summary</h2>
         <p class="muted">We reviewed your upload (demo mode). Here’s targeted feedback and tomorrow’s auto-generated plan.</p>
-        <ul id="analysis-feedback">
-          <!-- filled by JS -->
-        </ul>
+        <ul id="analysis-feedback"></ul>
       </div>
 
       <div class="card">
         <h3>Tomorrow’s Lesson Plan (Auto-Generated Demo)</h3>
         <p class="small">Focus is based on the weakest areas from exam + today’s (simulated) performance.</p>
-        <div id="tomorrow-plan">
-          <!-- filled by JS -->
-        </div>
+        <div id="tomorrow-plan"></div>
       </div>
 
       <div class="row">
@@ -496,8 +576,11 @@
 
     const diffWeight = { easy:1, medium:2, hard:3, Easy:1, Medium:2, Hard:3, E:1, M:2, H:3 };
 
-    // Render helpers
-    function go(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+    function go(id){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
     document.getElementById('cta-start').addEventListener('click', ()=>go('page-choose'));
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -579,7 +662,7 @@
     function submitExam(){
       // scoring
       let gained = 0, max = 0;
-      const byCat = {}; // {cat:{g:0,max:0}}
+      const byCat = {};
       questions.forEach(q=>{
         const w = diffWeight[q.diff] ?? 1;
         max += w;
@@ -706,28 +789,25 @@
 
     if (analyzeBtn){
       analyzeBtn.addEventListener('click', ()=>{
-        // DEMO "analysis": derive focus from initial exam; pretend performance
         const name = state.child.name.split(" ")[0] || "Your child";
         const res = state.results;
-        let weak = ["Math","Reading"]; // default
+        let weak = ["Math","Reading"];
         if (res && res.byCat){
           weak = Object.entries(res.byCat)
             .map(([cat,v])=>({cat, pct: Math.round((v.g/v.max)*100)}))
             .sort((a,b)=>a.pct-b.pct).slice(0,2).map(x=>x.cat);
         }
 
-        // Fake rubric outcomes
         const feedbackList = [
           `${name} showed improved stamina completing a full hour.`,
           `Fluency: ~60% accuracy on single-digit facts; missteps on 7± and 8± facts.`,
           `Reading: answered 3/5 comprehension questions — needs more “why/how” practice.`,
-          `Math foundations: ~40% on 2s/3s/4s tables; errors rose with 3× and 4×.`,
+          `Math foundations: ~40% on 2×/3×/4× tables; errors rose with 3× and 4×.`,
           `Logic: 2/3 correct with solid verbal reasoning.`
         ];
         const fbUl = document.getElementById('analysis-feedback');
         fbUl.innerHTML = feedbackList.map(x=>`<li>${x}</li>`).join("");
 
-        // Tomorrow plan — target weakest two cats
         const nextPrescriptions = {
           "Math":[
             "<strong>Fluency (10 min):</strong> 7± and 8± add/sub deck (20 cards).",
@@ -777,10 +857,6 @@
         go('page-analysis');
       });
     }
-
-    // Init
-    document.getElementById('cta-start').addEventListener('click', ()=>go('page-choose'));
-    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
