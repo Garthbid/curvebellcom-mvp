@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Curvebell — MVP</title>
+  <meta name="description" content="Curvebell MVP — bring your child to the right side of the bell curve." />
+  <style>
+    :root{
+      --bg:#0b0e14; --card:#121826; --muted:#6b7380; --text:#e6eaf2; --accent:#6cf; --ok:#2ecc71; --warn:#f39c12; --err:#e74c3c;
+      --ring:0 0 0 3px rgba(102,204,255,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:linear-gradient(180deg, #0b0f1a, #0b0e14 120%);
+      color:var(--text);
+    }
+    .container{max-width:1000px; margin-inline:auto; padding:24px}
+    header.site{display:flex; align-items:center; justify-content:space-between; gap:16px}
+    .logo{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px}
+    .logo-mark{
+      width:34px; height:34px; border-radius:12px; background: conic-gradient(from 200deg, #6cf, #7f87ff, #6cf);
+      display:grid; place-items:center; box-shadow:0 6px 24px rgba(108,204,255,.35);
+    }
+    .logo-mark::after{content:"∩"; font-weight:900; color:#0b0e14}
+    nav small{color:var(--muted)}
+    .card{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      padding:20px;
+    }
+    .hero{
+      display:grid; grid-template-columns: 1.2fr .8fr; gap:22px; align-items:center; margin-top:22px;
+    }
+    .hero h1{font-size:clamp(28px, 5vw, 46px); line-height:1.05; margin:0 0 8px}
+    .hero p{color:#cfd6e6; margin:0 0 18px}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      background:linear-gradient(180deg, #7fd3ff, #6cb8ff);
+      color:#051018; border:none; border-radius:14px; padding:14px 18px; font-weight:800; cursor:pointer;
+      box-shadow:0 12px 24px rgba(108,184,255,.35);
+    }
+    .btn:hover{filter:brightness(1.03)}
+    .btn.secondary{background:transparent; color:#cfe7ff; border:1px solid rgba(108,184,255,.32); box-shadow:none}
+    .btn:focus-visible{outline:none; box-shadow:var(--ring)}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    iframe{width:100%; aspect-ratio:16/9; border:0; border-radius:14px}
+    .muted{color:var(--muted)}
+    .center{display:grid; place-items:center}
+    .page{display:none; animation:fade .25s ease}
+    .page.active{display:block}
+    @keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+    .choice{
+      padding:18px; border-radius:14px; border:1px solid rgba(255,255,255,.08); cursor:pointer;
+      transition:.15s transform, .15s border-color, .15s background-color;
+      background:rgba(255,255,255,.03);
+    }
+    .choice:hover{transform:translateY(-2px); border-color:rgba(108,184,255,.45); background:rgba(108,184,255,.06)}
+    .choice input{display:none}
+    .choice .title{font-weight:800; margin-bottom:6px}
+    .price{
+      font-size:28px; font-weight:900; letter-spacing:.2px;
+    }
+    form label{display:block; font-weight:700; margin:10px 0 6px}
+    input[type="text"], input[type="number"], textarea{
+      width:100%; background:#0f1524; color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px 12px;
+    }
+    textarea{min-height:100px; resize:vertical}
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .row .btn{flex:1}
+    .exam-q{
+      padding:16px; border-radius:14px; border:1px solid rgba(255,255,255,.08); margin-bottom:14px; background:rgba(255,255,255,.03)
+    }
+    .exam-q h4{margin:0 0 8px; font-size:16px}
+    .exam-q .meta{font-size:12px; color:var(--muted); margin-bottom:8px}
+    .exam-q .opts{display:grid; gap:8px}
+    .exam-q .opts label{
+      display:flex; gap:10px; align-items:flex-start; background:#0f1524; border:1px solid rgba(255,255,255,.06);
+      border-radius:10px; padding:10px; cursor:pointer;
+    }
+    .exam-q .opts input{margin-top:3px}
+    .progress{height:10px; width:100%; background:#0e1320; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.08)}
+    .bar{height:100%; width:0%; background:linear-gradient(90deg, #7fd3ff, #6cb8ff); transition:width .25s}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid rgba(255,255,255,.12); border-radius:999px; color:#a9b3c7; font-size:12px}
+    .result-big{font-size: clamp(32px, 6vw, 64px); font-weight:900; margin:0}
+    .badge{padding:6px 10px; border-radius:10px; font-weight:800; color:#041016; background:#6cf; display:inline-block}
+    .lessons{display:grid; gap:12px}
+    .lessons .lesson{background:#0f1524; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px}
+    .small{font-size:12px; color:#a6b2c6}
+    .footer{border-top:1px solid rgba(255,255,255,.08); margin-top:22px; padding-top:12px; color:#8c95a8; font-size:12px}
+    .sp{height:8px}
+    .hide{display:none !important}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="site">
+      <div class="logo">
+        <div class="logo-mark" aria-hidden="true"></div>
+        <div>
+          <div>Curvebell</div>
+          <small class="muted">A system designed to bring kids to the right side of the bell curve.</small>
+        </div>
+      </div>
+      <nav><small>v0.1 — MVP</small></nav>
+    </header>
+
+    <!-- Landing -->
+    <section id="page-landing" class="page active">
+      <div class="hero">
+        <div class="card">
+          <h1>Personalized daily lessons that pull your child to the right side of the bell curve.</h1>
+          <p>Start with a quick assessment. We’ll generate tomorrow’s plan automatically. No fluff—just compounding gains.</p>
+          <div class="row">
+            <button class="btn" id="cta-start">Start Your Journey →</button>
+            <button class="btn secondary" onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})">Learn more</button>
+          </div>
+          <div style="height:10px"></div>
+          <div class="pill">⚡ 5-step flow · ~10 minutes</div>
+        </div>
+        <div class="card">
+          <iframe title="Curvebell Intro" src="https://www.youtube.com/embed/tgbNymZ7vqY" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div class="small sp"></div>
+          <div class="small">Replace the video ID in the iframe with your real intro when ready.</div>
+        </div>
+      </div>
+      <div class="footer">© <span id="year"></span> Curvebell. MVP for demo purposes.</div>
+    </section>
+
+    <!-- Journey 1: Choose schooling -->
+    <section id="page-choose" class="page">
+      <h2>Step 1 — Tell us about school</h2>
+      <p class="muted">Which best describes your child?</p>
+      <div class="grid-2">
+        <label class="choice">
+          <input type="radio" name="schoolType" value="home" />
+          <div class="title">Homeschooled</div>
+          <div class="muted">Daily 4-hour structured path with parent-guided blocks.</div>
+        </label>
+        <label class="choice">
+          <input type="radio" name="schoolType" value="public" />
+          <div class="title">Public/Private School</div>
+          <div class="muted">Daily 1-hour focused booster that fits after school.</div>
+        </label>
+      </div>
+      <div style="height:16px"></div>
+      <div class="row">
+        <button class="btn secondary" onclick="go('page-landing')">← Back</button>
+        <button class="btn" id="to-pricing">Continue →</button>
+      </div>
+    </section>
+
+    <!-- Journey 2: Pricing -->
+    <section id="page-pricing" class="page">
+      <h2>Step 2 — Plan & pricing</h2>
+      <p class="muted">Based on your selection.</p>
+      <div class="grid-2">
+        <div class="card" id="plan-summary">
+          <!-- filled by JS -->
+        </div>
+        <div class="card">
+          <h3>What you get</h3>
+          <ul>
+            <li>Daily adaptive lesson plan</li>
+            <li>Mastery tracking per skill</li>
+            <li>Weekly progress report</li>
+            <li>Parent tips & mini challenges</li>
+          </ul>
+          <div class="sp"></div>
+          <div class="pill">Cancel anytime · No hidden fees</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="row">
+        <button class="btn secondary" onclick="go('page-choose')">← Back</button>
+        <button class="btn" onclick="go('page-form')">Continue →</button>
+      </div>
+    </section>
+
+    <!-- Journey 3: Child form -->
+    <section id="page-form" class="page">
+      <h2>Step 3 — Who are we helping?</h2>
+      <form id="child-form" onsubmit="event.preventDefault(); startExam()">
+        <label for="childName">Full Name</label>
+        <input id="childName" name="childName" type="text" required placeholder="e.g., Ava Johnson" />
+
+        <label for="childAge">Age</label>
+        <input id="childAge" name="childAge" type="number" min="5" max="14" required placeholder="8" />
+
+        <label for="interests">Special Interests</label>
+        <textarea id="interests" name="interests" placeholder="Space, animals, drawing, soccer..."></textarea>
+
+        <div style="height:14px"></div>
+        <div class="row">
+          <button type="button" class="btn secondary" onclick="go('page-pricing')">← Back</button>
+          <button type="submit" class="btn">Start Initial Examination →</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Journey 4: Exam -->
+    <section id="page-exam" class="page">
+      <div class="row" style="align-items:center; justify-content:space-between">
+        <h2>Step 4 — Initial Examination (25 questions)</h2>
+        <div class="pill"><span id="answered-count">0</span>/25 answered</div>
+      </div>
+      <p class="muted">A mixed-difficulty check across math, reading, logic, science, and core knowledge for typical 8-year-olds. Answer your best—no pressure.</p>
+
+      <div class="card">
+        <strong>Reading passage (for Q6–Q10):</strong>
+        <p style="margin-top:8px; color:#cfd6e6">
+          Mia and her dog, Rusty, walked to the park on Saturday morning. Dark clouds gathered and a light rain began. They sat under a big oak tree until the rain stopped. When the sun came out, a bright rainbow appeared, and Mia laughed as Rusty chased his red ball across the shiny grass.
+        </p>
+      </div>
+      <div style="height:10px"></div>
+
+      <div id="exam-questions"></div>
+
+      <div class="card">
+        <div class="progress" aria-label="Progress">
+          <div class="bar" id="progress-bar"></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="row">
+          <button class="btn secondary" onclick="go('page-form')">← Back</button>
+          <button class="btn" id="submit-exam" disabled>Submit Exam →</button>
+        </div>
+        <div class="small muted sp"></div>
+        <div class="small muted">Tip: you can submit with unanswered items, but results are more accurate when all are answered.</div>
+      </div>
+    </section>
+
+    <!-- Journey 5: Results -->
+    <section id="page-result" class="page">
+      <div class="grid-2">
+        <div class="card">
+          <p class="badge">Demo Result</p>
+          <h3 style="margin:8px 0 6px">Your child scored at</h3>
+          <p class="result-big"><span id="score-pct">0</span>%</p>
+          <p class="muted" id="score-sub"></p>
+          <div class="sp"></div>
+          <div id="category-breakdown" class="small"></div>
+        </div>
+        <div class="card">
+          <h3>Tomorrow’s lesson — pre-built</h3>
+          <p class="muted">We target the lowest-scoring areas first to drive the fastest compounding gains.</p>
+          <div class="lessons" id="lesson-plan"></div>
+          <div class="sp"></div>
+          <div id="plan-cta" class="pill"></div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="row">
+        <button class="btn secondary" onclick="restart()">Start Over</button>
+        <button class="btn" onclick="window.print()">Print / Save PDF</button>
+      </div>
+      <div class="footer">This is a demo estimate based on the 25-item screener, not a clinical assessment.</div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      schoolType: null, // 'home' | 'public'
+      plan: { label: "", price: 0, hours: 0 },
+      child: { name: "", age: 8, interests: "" },
+      answers: {}, // { [id]: index }
+      results: null
+    };
+
+    const plans = {
+      home: { label: "Homeschooled Plan", price: 175, hours: 4, blurb: "Structured 4-hour daily plan tailored for home learning." },
+      public: { label: "After-School Booster", price: 75, hours: 1, blurb: "Focused 1-hour daily plan that fits after school." }
+    };
+
+    const questions = (() => {
+      let id=0;
+      const E="easy", M="medium", H="hard";
+      const Q = [];
+
+      // 1–5 Math
+      Q.push({id:++id, cat:"Math", diff:E, q:"What is 9 + 6?", opts:["13","14","15","16"], a:2});
+      Q.push({id:++id, cat:"Math", diff:M, q:"What is 24 − 8?", opts:["14","16","18","12"], a:1});
+      Q.push({id:++id, cat:"Math", diff:M, q:"What is 3 × 4?", opts:["7","8","12","16"], a:2});
+      Q.push({id:++id, cat:"Math", diff:H, q:"A book costs $7. If you buy 2 books with $20, how much change do you get?", opts:["$6","$7","$14","$8"], a:0});
+      Q.push({id:++id, cat:"Math", diff:E, q:"Which fraction is the same as 1/2?", opts:["1/3","2/4","3/4","2/3"], a:1});
+
+      // 6–10 Reading (based on passage)
+      Q.push({id:++id, cat:"Reading", diff:M, q:"What is the main idea of the passage?", opts:["Mia stayed home because it rained.","Mia and Rusty enjoyed the park even though it rained.","Rusty lost his red ball.","The oak tree was cut down."], a:1});
+      Q.push({id:++id, cat:"Reading", diff:E, q:"Why did Mia and Rusty sit under the oak tree?", opts:["To see a rainbow.","To eat lunch.","To stay dry while it rained.","To climb the tree."], a:2});
+      Q.push({id:++id, cat:"Reading", diff:E, q:"What happened after the rain stopped?", opts:["They went home.","A bright rainbow appeared.","They bought ice cream.","It started snowing."], a:1});
+      Q.push({id:++id, cat:"Reading", diff:M, q:"What does 'gathered' most nearly mean in the passage?", opts:["went away","came together","shouted","played"], a:1});
+      Q.push({id:++id, cat:"Reading", diff:M, q:"What did Rusty chase across the shiny grass?", opts:["a blue frisbee","a squirrel","his red ball","a kite"], a:2});
+
+      // 11–15 Logic/Patterns
+      Q.push({id:++id, cat:"Logic", diff:E, q:"What number comes next: 2, 4, 6, 8, __ ?", opts:["9","10","11","12"], a:1});
+      Q.push({id:++id, cat:"Logic", diff:M, q:"Which shape has exactly 3 sides?", opts:["Square","Triangle","Rectangle","Circle"], a:1});
+      Q.push({id:++id, cat:"Logic", diff:M, q:"Which is the odd one out?", opts:["Cat","Dog","Cow","Tree"], a:3});
+      Q.push({id:++id, cat:"Logic", diff:H, q:"If today is Tuesday, what day will it be in three days?", opts:["Wednesday","Thursday","Friday","Saturday"], a:2});
+      Q.push({id:++id, cat:"Logic", diff:M, q:"Bird is to sky as fish is to __", opts:["tree","sand","water","clouds"], a:2});
+
+      // 16–20 Science
+      Q.push({id:++id, cat:"Science", diff:E, q:"Water freezes at what temperature (°C)?", opts:["100°","0°","10°","−10°"], a:1});
+      Q.push({id:++id, cat:"Science", diff:M, q:"Which part of a plant makes food from sunlight?", opts:["Roots","Stem","Leaves","Flowers"], a:2});
+      Q.push({id:++id, cat:"Science", diff:E, q:"Which planet do we live on?", opts:["Mars","Venus","Earth","Jupiter"], a:2});
+      Q.push({id:++id, cat:"Science", diff:M, q:"What force pulls objects toward Earth?", opts:["Friction","Magnetism","Electricity","Gravity"], a:3});
+      Q.push({id:++id, cat:"Science", diff:H, q:"Which material is the best conductor of electricity?", opts:["Wood","Rubber","Copper","Glass"], a:2});
+
+      // 21–25 Core Knowledge
+      Q.push({id:++id, cat:"Core", diff:E, q:"How many minutes are in one hour?", opts:["30","45","60","90"], a:2});
+      Q.push({id:++id, cat:"Core", diff:M, q:"Which day comes after Thursday?", opts:["Tuesday","Friday","Sunday","Monday"], a:1});
+      Q.push({id:++id, cat:"Core", diff:M, q:"You have two quarters and one dime. How much money is that?", opts:["40¢","50¢","60¢","70¢"], a:2});
+      Q.push({id:++id, cat:"Core", diff:M, q:"A rectangle has how many right angles?", opts:["2","3","4","5"], a:2});
+      Q.push({id:++id, cat:"Core", diff:E, q:"Which punctuation mark ends a question?", opts:[".","!","?",";"], a:2});
+
+      return Q;
+    })();
+
+    const diffWeight = { easy:1, medium:2, hard:3, Easy:1, Medium:2, Hard:3, E:1, M:2, H:3 };
+
+    // Render helpers
+    function go(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+    document.getElementById('cta-start').addEventListener('click', ()=>go('page-choose'));
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Choose schooling → pricing
+    document.getElementById('to-pricing').addEventListener('click', ()=>{
+      const choice = [...document.querySelectorAll('input[name="schoolType"]')].find(i=>i.checked);
+      if(!choice){ alert("Please select one to continue."); return; }
+      state.schoolType = choice.value;
+      state.plan = plans[state.schoolType];
+      const el = document.getElementById('plan-summary');
+      el.innerHTML = `
+        <h3>${state.plan.label}</h3>
+        <div class="price">$${state.plan.price}/month</div>
+        <div class="muted">${state.plan.blurb}</div>
+        <div class="sp"></div>
+        <ul>
+          <li>${state.plan.hours} hours per day</li>
+          <li>Adaptive difficulty curve</li>
+          <li>Parent dashboard</li>
+        </ul>
+      `;
+      go('page-pricing');
+    });
+
+    // Child form
+    function startExam(){
+      const name = document.getElementById('childName').value.trim();
+      const age = parseInt(document.getElementById('childAge').value,10);
+      const interests = document.getElementById('interests').value.trim();
+      if(!name || !age){ alert("Please provide your child's name and age."); return; }
+      state.child = { name, age, interests };
+      buildExam();
+      go('page-exam');
+    }
+
+    // Build exam UI
+    function buildExam(){
+      const wrap = document.getElementById('exam-questions');
+      wrap.innerHTML = "";
+      questions.forEach(q=>{
+        const qEl = document.createElement('div');
+        qEl.className = 'exam-q';
+        qEl.innerHTML = `
+          <h4>Q${q.id}. ${q.q}</h4>
+          <div class="meta">${q.cat} · <span class="muted">${q.diff[0].toUpperCase() + q.diff.slice(1)} difficulty</span></div>
+          <div class="opts">
+            ${q.opts.map((opt,idx)=>`
+              <label>
+                <input type="radio" name="q${q.id}" value="${idx}" ${state.answers[q.id]===idx?'checked':''}/>
+                <span>${String.fromCharCode(65+idx)}. ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+        wrap.appendChild(qEl);
+      });
+
+      wrap.querySelectorAll('input[type="radio"]').forEach(inp=>{
+        inp.addEventListener('change', e=>{
+          const name = e.target.name; // q{id}
+          const id = parseInt(name.slice(1),10);
+          state.answers[id] = parseInt(e.target.value,10);
+          updateProgress();
+        });
+      });
+
+      updateProgress();
+      document.getElementById('submit-exam').onclick = submitExam;
+    }
+
+    function updateProgress(){
+      const answered = Object.keys(state.answers).length;
+      document.getElementById('answered-count').textContent = answered;
+      const pct = Math.round((answered / questions.length) * 100);
+      document.getElementById('progress-bar').style.width = pct + "%";
+      document.getElementById('submit-exam').disabled = answered === 0;
+    }
+
+    function submitExam(){
+      // scoring
+      let gained = 0, max = 0;
+      const byCat = {}; // {cat:{g:0,max:0}}
+      questions.forEach(q=>{
+        const w = diffWeight[q.diff] ?? 1;
+        max += w;
+        byCat[q.cat] ??= { g:0, max:0 };
+        byCat[q.cat].max += w;
+        const picked = state.answers[q.id];
+        if(picked === q.a){
+          gained += w;
+          byCat[q.cat].g += w;
+        }
+      });
+      const pct = Math.round( (gained / max) * 100 );
+      state.results = { pct, gained, max, byCat };
+
+      // results page fill
+      document.getElementById('score-pct').textContent = pct;
+      const sub = document.getElementById('score-sub');
+      const name = state.child.name.split(" ")[0] || "Your child";
+      sub.textContent = `${name} answered ${Object.keys(state.answers).length} of ${questions.length} items. Weighted score ${gained}/${max}.`;
+
+      // breakdown
+      const bd = document.getElementById('category-breakdown');
+      const items = Object.entries(byCat).map(([cat, v])=>{
+        const p = Math.round((v.g/v.max)*100);
+        return `<div class="pill">${cat}: ${p}%</div>`;
+      }).join(' ');
+      bd.innerHTML = `<div class="row" style="gap:8px">${items}</div>`;
+
+      // lessons from weakest two categories
+      const ranked = Object.entries(byCat)
+        .map(([cat,v])=>({cat, pct: Math.round((v.g/v.max)*100)}))
+        .sort((a,b)=>a.pct-b.pct);
+      const focus = ranked.slice(0,2).map(x=>x.cat);
+
+      const prescriptions = {
+        "Math":[
+          "10-minute warm-up: skip-counting by 2s, 3s, 4s.",
+          "Fluency: single-digit × and ÷ flash (5 minutes).",
+          "Word problems: 3 real-life money or time problems.",
+          "Challenge: one multi-step problem aloud—explain thinking."
+        ],
+        "Reading":[
+          "Read a 2-paragraph story aloud; parent asks 3 who/what/why questions.",
+          "Find 3 new words; guess meanings from context, then check.",
+          "Sequence: retell events in order; write 3 sentences.",
+          "Fluency: 5 minutes timed reading; mark tricky words."
+        ],
+        "Logic":[
+          "Pattern practice: finish 8 number/shape sequences.",
+          "Analogies: do 6 simple analogies together.",
+          "Calendar math: +/− days from today (3 examples).",
+          "Game: 10 minutes of chess puzzles or tangrams."
+        ],
+        "Science":[
+          "Mini-lab: freeze/melt water; note temperature change.",
+          "Plant study: label leaf, stem, root; sunlight journal.",
+          "Forces: test gravity vs. friction with a toy car ramp.",
+          "Space fact: draw Earth and the Moon; discuss orbits."
+        ],
+        "Core":[
+          "Time: read clocks at :15/:30/:45; convert to minutes.",
+          "Money: make 4 amounts with coins; add and compare.",
+          "Geography: label continents & oceans from memory.",
+          "Writing: 5 question sentences (use '?') about a photo."
+        ]
+      };
+
+      const lp = document.getElementById('lesson-plan');
+      lp.innerHTML = focus.map(cat=>{
+        const list = prescriptions[cat].slice(0,4).map(item=>`<li>${item}</li>`).join("");
+        return `
+          <div class="lesson">
+            <strong>${cat} Focus (≈ ${state.plan.hours ? Math.max(15, Math.round(60/state.plan.hours)) : 30} min total)</strong>
+            <ul style="margin:8px 0 0 18px">${list}</ul>
+          </div>
+        `;
+      }).join("");
+
+      const planCta = document.getElementById('plan-cta');
+      planCta.textContent = `${state.plan.label}: $${state.plan.price}/month · ${state.plan.hours}h/day`;
+
+      go('page-result');
+    }
+
+    function restart(){
+      state.schoolType = null;
+      state.plan = { label:"", price:0, hours:0 };
+      state.child = { name:"", age:8, interests:"" };
+      state.answers = {};
+      state.results = null;
+      // UI reset
+      document.querySelectorAll('input[name="schoolType"]').forEach(i=>i.checked=false);
+      document.getElementById('child-form').reset();
+      document.getElementById('exam-questions').innerHTML = "";
+      document.getElementById('answered-count').textContent = "0";
+      document.getElementById('progress-bar').style.width = "0%";
+      document.getElementById('submit-exam').disabled = true;
+      go('page-landing');
+    }
+  </script>
+</body>
+</html>
