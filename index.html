@@ -58,15 +58,16 @@
       padding:18px; border-radius:14px; border:1px solid rgba(255,255,255,.08); cursor:pointer;
       transition:.15s transform, .15s border-color, .15s background-color;
       background:rgba(255,255,255,.03);
+      display:block;
     }
     .choice:hover{transform:translateY(-2px); border-color:rgba(108,184,255,.45); background:rgba(108,184,255,.06)}
-    .choice input{display:none}
+    .choice input{margin-right:10px}
     .choice .title{font-weight:800; margin-bottom:6px}
     .price{
       font-size:28px; font-weight:900; letter-spacing:.2px;
     }
     form label{display:block; font-weight:700; margin:10px 0 6px}
-    input[type="text"], input[type="number"], textarea{
+    input[type="text"], input[type="number"], textarea, input[type="file"]{
       width:100%; background:#0f1524; color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px 12px;
     }
     textarea{min-height:100px; resize:vertical}
@@ -94,6 +95,16 @@
     .footer{border-top:1px solid rgba(255,255,255,.08); margin-top:22px; padding-top:12px; color:#8c95a8; font-size:12px}
     .sp{height:8px}
     .hide{display:none !important}
+    /* Print styles for worksheets */
+    @media print{
+      body{background:#fff; color:#000}
+      header.site, nav, .pill, .footer, .btn{display:none !important}
+      .card{background:#fff; border:1px solid #000; box-shadow:none}
+      .page{display:block !important}
+    }
+    .print-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+    .worksheet-line{display:block; border-bottom:1px dashed #6b7380; margin:8px 0; height:18px}
+    .img-preview{max-width:100%; border-radius:12px; border:1px solid rgba(255,255,255,.1)}
   </style>
 </head>
 <body>
@@ -106,7 +117,7 @@
           <small class="muted">A system designed to bring kids to the right side of the bell curve.</small>
         </div>
       </div>
-      <nav><small>v0.1 — MVP</small></nav>
+      <nav><small>v0.2 — MVP</small></nav>
     </header>
 
     <!-- Landing -->
@@ -135,18 +146,16 @@
     <section id="page-choose" class="page">
       <h2>Step 1 — Tell us about school</h2>
       <p class="muted">Which best describes your child?</p>
-      <div class="grid-2">
-        <label class="choice">
-          <input type="radio" name="schoolType" value="home" />
-          <div class="title">Homeschooled</div>
-          <div class="muted">Daily 4-hour structured path with parent-guided blocks.</div>
-        </label>
-        <label class="choice">
-          <input type="radio" name="schoolType" value="public" />
-          <div class="title">Public/Private School</div>
-          <div class="muted">Daily 1-hour focused booster that fits after school.</div>
-        </label>
-      </div>
+      <label class="choice">
+        <input type="radio" name="schoolType" value="home" />
+        <span class="title">Homeschooled</span>
+        <div class="muted">Daily 4-hour structured path with parent-guided blocks.</div>
+      </label>
+      <label class="choice">
+        <input type="radio" name="schoolType" value="public" />
+        <span class="title">Public/Private School</span>
+        <div class="muted">Daily 1-hour focused booster that fits after school.</div>
+      </label>
       <div style="height:16px"></div>
       <div class="row">
         <button class="btn secondary" onclick="go('page-landing')">← Back</button>
@@ -159,9 +168,7 @@
       <h2>Step 2 — Plan & pricing</h2>
       <p class="muted">Based on your selection.</p>
       <div class="grid-2">
-        <div class="card" id="plan-summary">
-          <!-- filled by JS -->
-        </div>
+        <div class="card" id="plan-summary"></div>
         <div class="card">
           <h3>What you get</h3>
           <ul>
@@ -189,7 +196,7 @@
         <input id="childName" name="childName" type="text" required placeholder="e.g., Ava Johnson" />
 
         <label for="childAge">Age</label>
-        <input id="childAge" name="childAge" type="number" min="5" max="14" required placeholder="8" />
+        <input id="childAge" name="childAge" type="number" min="5" max="14" required placeholder="10" />
 
         <label for="interests">Special Interests</label>
         <textarea id="interests" name="interests" placeholder="Space, animals, drawing, soccer..."></textarea>
@@ -208,7 +215,7 @@
         <h2>Step 4 — Initial Examination (25 questions)</h2>
         <div class="pill"><span id="answered-count">0</span>/25 answered</div>
       </div>
-      <p class="muted">A mixed-difficulty check across math, reading, logic, science, and core knowledge for typical 8-year-olds. Answer your best—no pressure.</p>
+      <p class="muted">A mixed-difficulty check across math, reading, logic, science, and core knowledge for typical 8–10-year-olds. Answer your best—no pressure.</p>
 
       <div class="card">
         <strong>Reading passage (for Q6–Q10):</strong>
@@ -256,9 +263,176 @@
       <div style="height:16px"></div>
       <div class="row">
         <button class="btn secondary" onclick="restart()">Start Over</button>
-        <button class="btn" onclick="window.print()">Print / Save PDF</button>
+        <button class="btn" onclick="go('page-lesson')">Create Daily Lesson Plan</button>
       </div>
       <div class="footer">This is a demo estimate based on the 25-item screener, not a clinical assessment.</div>
+    </section>
+
+    <!-- Journey 6: Daily Lesson Plan (Detailed, Printable) -->
+    <section id="page-lesson" class="page">
+      <div class="card">
+        <p class="badge">Day 1 — Printable Lesson</p>
+        <h2 style="margin:8px 0 6px">Daily Lesson Plan — 60 Minutes</h2>
+        <p class="small">
+          For <strong><span id="lesson-child-name">Your child</span></strong>. Assumed age: <strong>10</strong> · Initial exam: <strong>23%</strong>.
+        </p>
+        <div class="pill">Materials: pencil, eraser, scrap paper, timer, printed page(s)</div>
+      </div>
+
+      <!-- Warm-up -->
+      <div class="card">
+        <h3>1) Warm-Up Fluency (10 minutes)</h3>
+        <p class="muted">Goal: sharpen single-digit facts and quick thinking.</p>
+        <div class="print-grid">
+          <div>
+            <strong>A. Addition (answer mentally)</strong>
+            <div>7+5=____  8+6=____  9+4=____  6+7=____  3+9=____  5+8=____</div>
+            <div>4+7=____  9+3=____  6+6=____  8+5=____  7+7=____  4+9=____</div>
+          </div>
+          <div>
+            <strong>B. Subtraction</strong>
+            <div>13−7=____  15−8=____  11−6=____  14−9=____  12−5=____  16−7=____</div>
+            <div>18−9=____  10−4=____  12−8=____  17−9=____  11−3=____  9−5=____</div>
+          </div>
+        </div>
+        <div style="margin-top:8px"><em>Timer:</em> 5 min add + 5 min subtract. Parent circles items needing practice.</div>
+      </div>
+
+      <!-- Reading -->
+      <div class="card">
+        <h3>2) Reading & Comprehension (15 minutes)</h3>
+        <p><strong>Read aloud:</strong> <em>The Sandcastle Plan</em></p>
+        <p style="color:#cfd6e6">
+          On a breezy afternoon, Maya and her brother Eli brought three buckets to the beach: one for water, one for sand, and one for shells.
+          They planned the tallest sandcastle they had ever built. First they marked a wide circle with a stick. Then Maya packed wet sand into a big bucket while Eli fetched
+          more water before the walls could dry. Seagulls wheeled overhead as their castle grew towers, windows, and a winding shell path to the gate.
+          When a wave rolled closer, the moat they dug caught the water and held it like a glittering bracelet. A little boy asked how they kept
+          the towers from falling. “We pack the sand tight and add water slowly,” Maya explained. By sunset, the castle stood firm. Maya and Eli took a photo,
+          knowing the tide would erase it by morning—but their plan had worked.
+        </p>
+        <ol>
+          <li>Main idea in one sentence: <span class="worksheet-line"></span></li>
+          <li>Why did they dig a moat? <span class="worksheet-line"></span></li>
+          <li>What materials did they use? <span class="worksheet-line"></span></li>
+          <li>What tip did Maya share? <span class="worksheet-line"></span></li>
+          <li>Circle the best title: <em>Beach Games</em> / <em>Building with a Plan</em> / <em>Shell Hunting</em></li>
+        </ol>
+      </div>
+
+      <!-- Vocabulary -->
+      <div class="card">
+        <h3>3) Vocabulary (10 minutes)</h3>
+        <p class="muted">Say each word, guess the meaning, then write a sentence.</p>
+        <ol>
+          <li><strong>bracelet</strong> (context: a ring around the moat): <span class="worksheet-line"></span></li>
+          <li><strong>wheeled</strong> (as birds move): <span class="worksheet-line"></span></li>
+          <li><strong>packed</strong> (sand tightly): <span class="worksheet-line"></span></li>
+          <li><strong>erase</strong> (what the tide will do): <span class="worksheet-line"></span></li>
+          <li><strong>planned</strong> (made a plan): <span class="worksheet-line"></span></li>
+        </ol>
+      </div>
+
+      <!-- Math Foundations -->
+      <div class="card">
+        <h3>4) Math Foundations (15 minutes)</h3>
+        <div class="print-grid">
+          <div>
+            <strong>A. Multiplication facts (2s, 3s, 4s)</strong>
+            <div>2×3=__  2×7=__  2×9=__  3×4=__  3×6=__  3×8=__  4×3=__  4×4=__  4×6=__  4×8=__  3×9=__  2×8=__</div>
+          </div>
+          <div>
+            <strong>B. Word problems</strong>
+            <ol>
+              <li>A sticker costs 4¢. You buy 6. Total = __¢</li>
+              <li>There are 3 bags with 8 marbles each. Marbles = __</li>
+              <li>2 boxes hold 4 pencils each, plus 3 more pencils. Total = __</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logic -->
+      <div class="card">
+        <h3>5) Critical Thinking (10 minutes)</h3>
+        <ol>
+          <li><strong>Pattern:</strong> 2, 4, 6, 8, __, __</li>
+          <li><strong>Odd one out:</strong> cat · dog · cow · tree → __</li>
+          <li><strong>Analogy:</strong> Bird : sky :: fish : __</li>
+        </ol>
+      </div>
+
+      <!-- Parent checklist & Answer Key -->
+      <div class="card">
+        <h3>Parent Checklist</h3>
+        <ul>
+          <li>Kept to 60 minutes (+/− 5)</li>
+          <li>Reading done aloud; questions answered in full sentences</li>
+          <li>Math facts attempted without calculator</li>
+          <li>Encouraged child to explain reasoning (math + logic)</li>
+        </ul>
+        <details>
+          <summary><strong>Answer Key (for parent)</strong></summary>
+          <div class="small">
+            <p><strong>Warm-Up:</strong> add/sub mental accuracy, mark misses.</p>
+            <p><strong>Reading:</strong> 1) planning/building a sandcastle with a plan; 2) to catch/slow incoming waves; 3) water, sand, shells, bucket, stick; 4) pack sand tight and add water slowly; 5) “Building with a Plan”.</p>
+            <p><strong>Vocab (sample meanings):</strong> bracelet: ring/loop; wheeled: circled/turned; packed: pressed tightly; erase: remove/wipe away; planned: decided steps ahead of time.</p>
+            <p><strong>Math A:</strong> 6,14,18,12,18,24,12,16,24,32,27,16.</p>
+            <p><strong>Math B:</strong> 24¢; 24; 11.</p>
+            <p><strong>Logic:</strong> pattern → 10, 12; odd one out → tree; analogy → water.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="row">
+        <button class="btn secondary" onclick="go('page-result')">← Back to Results</button>
+        <button class="btn" onclick="window.print()">Print Today’s Lesson</button>
+        <button class="btn" onclick="go('page-upload')">Upload Completed Lesson →</button>
+      </div>
+      <div class="small muted">Tip: Take a clear photo of the filled worksheet(s) for analysis.</div>
+    </section>
+
+    <!-- Journey 7: Upload Completed Lesson -->
+    <section id="page-upload" class="page">
+      <div class="card">
+        <p class="badge">Upload</p>
+        <h2>Submit Today’s Work</h2>
+        <p class="muted">Upload a clear photo of the completed lesson (JPEG/PNG). For demo, we’ll simulate analysis.</p>
+        <input id="upload-input" type="file" accept="image/*" />
+        <div style="height:12px"></div>
+        <img id="upload-preview" class="img-preview hide" alt="Preview"/>
+      </div>
+      <div class="row">
+        <button class="btn secondary" onclick="go('page-lesson')">← Back to Lesson</button>
+        <button id="analyze-btn" class="btn" disabled>Analyze →</button>
+      </div>
+      <div class="small muted">Note: In production, this image would be analyzed by our vision model (OCR + rubric scoring).</div>
+    </section>
+
+    <!-- Journey 8: Analysis & Tomorrow Plan -->
+    <section id="page-analysis" class="page">
+      <div class="card">
+        <p class="badge">Analysis (Demo)</p>
+        <h2>Feedback Summary</h2>
+        <p class="muted">We reviewed your upload (demo mode). Here’s targeted feedback and tomorrow’s auto-generated plan.</p>
+        <ul id="analysis-feedback">
+          <!-- filled by JS -->
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Tomorrow’s Lesson Plan (Auto-Generated Demo)</h3>
+        <p class="small">Focus is based on the weakest areas from exam + today’s (simulated) performance.</p>
+        <div id="tomorrow-plan">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn secondary" onclick="go('page-upload')">← Back to Upload</button>
+        <button class="btn" onclick="window.print()">Print Tomorrow’s Lesson</button>
+        <button class="btn" onclick="go('page-upload')">After Tomorrow, Upload Again →</button>
+      </div>
+      <div class="footer">Demo: No real image processing yet. The loop repeats daily: print → complete → upload → analyze → improve.</div>
     </section>
   </div>
 
@@ -266,9 +440,10 @@
     const state = {
       schoolType: null, // 'home' | 'public'
       plan: { label: "", price: 0, hours: 0 },
-      child: { name: "", age: 8, interests: "" },
+      child: { name: "", age: 10, interests: "" },
       answers: {}, // { [id]: index }
-      results: null
+      results: null,
+      lastUploadUrl: null
     };
 
     const plans = {
@@ -425,6 +600,10 @@
       const name = state.child.name.split(" ")[0] || "Your child";
       sub.textContent = `${name} answered ${Object.keys(state.answers).length} of ${questions.length} items. Weighted score ${gained}/${max}.`;
 
+      // show child's name on Lesson page as well
+      const nameSlot = document.getElementById('lesson-child-name');
+      if (nameSlot) nameSlot.textContent = name;
+
       // breakdown
       const bd = document.getElementById('category-breakdown');
       const items = Object.entries(byCat).map(([cat, v])=>{
@@ -433,7 +612,7 @@
       }).join(' ');
       bd.innerHTML = `<div class="row" style="gap:8px">${items}</div>`;
 
-      // lessons from weakest two categories
+      // lessons from weakest two categories for result preview
       const ranked = Object.entries(byCat)
         .map(([cat,v])=>({cat, pct: Math.round((v.g/v.max)*100)}))
         .sort((a,b)=>a.pct-b.pct);
@@ -484,7 +663,7 @@
       }).join("");
 
       const planCta = document.getElementById('plan-cta');
-      planCta.textContent = `${state.plan.label}: $${state.plan.price}/month · ${state.plan.hours}h/day`;
+      planCta.textContent = `${state.plan.label || 'Daily Plan'} · ${state.plan.hours || 1}h/day`;
 
       go('page-result');
     }
@@ -492,18 +671,116 @@
     function restart(){
       state.schoolType = null;
       state.plan = { label:"", price:0, hours:0 };
-      state.child = { name:"", age:8, interests:"" };
+      state.child = { name:"", age:10, interests:"" };
       state.answers = {};
       state.results = null;
+      state.lastUploadUrl = null;
       // UI reset
       document.querySelectorAll('input[name="schoolType"]').forEach(i=>i.checked=false);
-      document.getElementById('child-form').reset();
+      const form = document.getElementById('child-form'); if(form) form.reset();
       document.getElementById('exam-questions').innerHTML = "";
       document.getElementById('answered-count').textContent = "0";
       document.getElementById('progress-bar').style.width = "0%";
-      document.getElementById('submit-exam').disabled = true;
+      const submitBtn = document.getElementById('submit-exam'); if (submitBtn) submitBtn.disabled = true;
+      const prev = document.getElementById('upload-preview'); if(prev){ prev.src=""; prev.classList.add('hide'); }
+      const upBtn = document.getElementById('analyze-btn'); if(upBtn){ upBtn.disabled = true; }
       go('page-landing');
     }
+
+    // Upload page handlers (demo)
+    const uploadInput = document.getElementById('upload-input');
+    const uploadPreview = document.getElementById('upload-preview');
+    const analyzeBtn = document.getElementById('analyze-btn');
+
+    if (uploadInput){
+      uploadInput.addEventListener('change', (e)=>{
+        const file = e.target.files && e.target.files[0];
+        if(!file){ analyzeBtn.disabled = true; return; }
+        const url = URL.createObjectURL(file);
+        state.lastUploadUrl = url;
+        uploadPreview.src = url;
+        uploadPreview.classList.remove('hide');
+        analyzeBtn.disabled = false;
+      });
+    }
+
+    if (analyzeBtn){
+      analyzeBtn.addEventListener('click', ()=>{
+        // DEMO "analysis": derive focus from initial exam; pretend performance
+        const name = state.child.name.split(" ")[0] || "Your child";
+        const res = state.results;
+        let weak = ["Math","Reading"]; // default
+        if (res && res.byCat){
+          weak = Object.entries(res.byCat)
+            .map(([cat,v])=>({cat, pct: Math.round((v.g/v.max)*100)}))
+            .sort((a,b)=>a.pct-b.pct).slice(0,2).map(x=>x.cat);
+        }
+
+        // Fake rubric outcomes
+        const feedbackList = [
+          `${name} showed improved stamina completing a full hour.`,
+          `Fluency: ~60% accuracy on single-digit facts; missteps on 7± and 8± facts.`,
+          `Reading: answered 3/5 comprehension questions — needs more “why/how” practice.`,
+          `Math foundations: ~40% on 2s/3s/4s tables; errors rose with 3× and 4×.`,
+          `Logic: 2/3 correct with solid verbal reasoning.`
+        ];
+        const fbUl = document.getElementById('analysis-feedback');
+        fbUl.innerHTML = feedbackList.map(x=>`<li>${x}</li>`).join("");
+
+        // Tomorrow plan — target weakest two cats
+        const nextPrescriptions = {
+          "Math":[
+            "<strong>Fluency (10 min):</strong> 7± and 8± add/sub deck (20 cards).",
+            "<strong>Tables (15 min):</strong> 3× & 4× ladder practice; chant + write.",
+            "<strong>Word problems (10 min):</strong> 4 money/time problems; explain aloud.",
+            "<strong>Checkpoint (5 min):</strong> 10 mixed facts; goal 80%+."
+          ],
+          "Reading":[
+            "<strong>Read aloud (10 min):</strong> 2 short paragraphs; pause to paraphrase.",
+            "<strong>Questioning (10 min):</strong> 5 Why/How prompts; require evidence from text.",
+            "<strong>Vocabulary (5 min):</strong> 4 words from text; define + use in a sentence.",
+            "<strong>Retell (5 min):</strong> Sequence beginning–middle–end in 3 sentences."
+          ],
+          "Logic":[
+            "<strong>Puzzles (10 min):</strong> 6 analogies; discuss relationships.",
+            "<strong>Patterns (10 min):</strong> build/extend 2 arithmetic sequences.",
+            "<strong>Game (5 min):</strong> 5 chess mate-in-one puzzles."
+          ],
+          "Science":[
+            "<strong>Mini-lab (10 min):</strong> mass vs. volume with water and cups.",
+            "<strong>Concept (10 min):</strong> gravity vs. friction examples at home."
+          ],
+          "Core":[
+            "<strong>Time (10 min):</strong> read clocks at :15/:30/:45; convert to minutes.",
+            "<strong>Money (10 min):</strong> make 4 amounts with coins; compare values."
+          ]
+        };
+
+        const chosenCats = weak;
+        const planHtml = chosenCats.map(cat=>{
+          const items = (nextPrescriptions[cat]||[]).map(i=>`<li>${i}</li>`).join("");
+          return `
+            <div class="lesson" style="margin-bottom:8px">
+              <strong>${cat} Focus</strong>
+              <ul style="margin:6px 0 0 18px">${items}</ul>
+            </div>
+          `;
+        }).join("");
+
+        document.getElementById('tomorrow-plan').innerHTML = `
+          <div class="lessons">
+            ${planHtml}
+            <div class="lesson"><strong>Motivation (5 min):</strong> praise effort; note 1 win; set a tiny goal for tomorrow.</div>
+          </div>
+        `;
+
+        go('page-analysis');
+      });
+    }
+
+    // Init
+    document.getElementById('cta-start').addEventListener('click', ()=>go('page-choose'));
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
